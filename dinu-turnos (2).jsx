@@ -1,0 +1,502 @@
+import { useState } from "react";
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySEU5Q9ywn2twMrmOK6sG5G3mHgj_KiEpROzncg0U4U6LWh9zFX-7_JZX-Z3jYFcMpeA/exec";
+
+const LOGO = "data:image/jpeg;base64,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";
+
+
+const SERVICIOS = [
+  { id: "clinica", icon: "🩺", nombre: "Consulta Clínica", duracion: "30 min", descripcion: "Revisación general y diagnóstico" },
+  { id: "vacuna", icon: "💉", nombre: "Vacunación", duracion: "15 min", descripcion: "Plan sanitario y refuerzos" },
+  { id: "cirugia", icon: "⚕️", nombre: "Cirugía", duracion: "Según caso", descripcion: "Intervenciones programadas" },
+
+];
+
+const HORARIOS_SEMANA = [
+  "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00",
+  "17:00", "17:30", "18:00", "18:30", "19:00", "19:30"
+];
+const HORARIOS_SABADO = [
+  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30"
+];
+const OCUPADOS = ["10:00", "11:30", "17:30", "19:00"];
+
+function getDias() {
+  const dias = [];
+  const hoy = new Date();
+  const nombres = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(hoy);
+    d.setDate(hoy.getDate() + i);
+    if (d.getDay() !== 0) {
+      dias.push({
+        fecha: d,
+        dia: nombres[d.getDay()],
+        numero: d.getDate(),
+        mes: meses[d.getMonth()],
+        key: d.toISOString().split("T")[0],
+        esSabado: d.getDay() === 6,
+      });
+    }
+  }
+  return dias;
+}
+
+export default function DinuTurnos() {
+  const [paso, setPaso] = useState(1);
+  const [servicio, setServicio] = useState(null);
+  const [diaSeleccionado, setDiaSeleccionado] = useState(null);
+  const [horario, setHorario] = useState(null);
+  const [form, setForm] = useState({ nombre: "", telefono: "", email: "", mascota: "", especie: "perro", raza: "", edad: "", notas: "" });
+  const [enviado, setEnviado] = useState(false);
+
+  const dias = getDias();
+
+  const handleForm = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const [enviando, setEnviando] = useState(false);
+
+  const confirmar = async () => {
+    setEnviando(true);
+    try {
+      const params = new URLSearchParams({
+        fecha: diaSeleccionado.key,
+        horario,
+        servicioId: servicio.id,
+        servicioNombre: servicio.nombre,
+        nombre: form.nombre,
+        telefono: form.telefono,
+        email: form.email || '',
+        mascota: form.mascota,
+        especie: form.especie,
+        raza: form.raza || '',
+        edad: form.edad || '',
+        notas: form.notas || '',
+      });
+      await fetch(APPS_SCRIPT_URL + '?' + params.toString(), {
+        method: "GET",
+        mode: "no-cors",
+      });
+    } catch (e) {
+      console.error("Error al enviar turno:", e);
+    }
+    setEnviando(false);
+    setEnviado(true);
+  };
+
+  const resetear = () => {
+    setPaso(1); setServicio(null); setDiaSeleccionado(null);
+    setHorario(null); setForm({ nombre: "", telefono: "", email: "", mascota: "", especie: "perro", raza: "", edad: "", notas: "" });
+    setEnviado(false);
+  };
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #1a0533 0%, #2d0b5e 40%, #1a0533 100%)",
+      fontFamily: "'Georgia', serif",
+      padding: "0",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      {/* Decorative background orbs */}
+      <div style={{ position: "fixed", top: "-100px", right: "-100px", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(197,168,90,0.12) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "fixed", bottom: "-150px", left: "-100px", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(147,91,184,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+      {/* Header */}
+      <header style={{
+        background: "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(197,168,90,0.2)",
+        padding: "16px 24px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{
+            width: "48px", height: "48px", borderRadius: "50%",
+            background: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            overflow: "hidden", boxShadow: "0 0 20px rgba(197,168,90,0.4)"
+          }}>
+            <img src={LOGO} alt="Dinu Veterinaria" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div>
+            <div style={{ color: "#c5a85a", fontSize: "18px", fontWeight: "bold", letterSpacing: "0.05em" }}>Dinu Veterinaria</div>
+            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "11px", letterSpacing: "0.1em" }}>Rafael Calzada · RESERVÁ TU TURNO</div>
+          </div>
+        </div>
+        {!enviado && (
+          <div style={{ display: "flex", gap: "6px" }}>
+            {[1, 2, 3, 4].map(n => (
+              <div key={n} style={{
+                width: n <= paso ? "24px" : "8px",
+                height: "8px",
+                borderRadius: "4px",
+                background: n <= paso ? "linear-gradient(90deg, #c5a85a, #e8d08a)" : "rgba(255,255,255,0.15)",
+                transition: "all 0.4s ease",
+              }} />
+            ))}
+          </div>
+        )}
+      </header>
+
+      <main style={{ maxWidth: "680px", margin: "0 auto", padding: "32px 20px 60px" }}>
+
+        {/* PASO 1: Servicio */}
+        {!enviado && paso === 1 && (
+          <div>
+            <h1 style={{ color: "#fff", fontSize: "26px", marginBottom: "6px", fontWeight: "normal" }}>
+              ¿Qué atención necesita tu mascota?
+            </h1>
+            <p style={{ color: "rgba(255,255,255,0.45)", marginBottom: "28px", fontSize: "14px" }}>Seleccioná el tipo de consulta</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              {SERVICIOS.map(s => (
+                <button key={s.id} onClick={() => { setServicio(s); setPaso(2); }}
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(197,168,90,0.2)",
+                    borderRadius: "16px",
+                    padding: "20px 16px",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.25s ease",
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(197,168,90,0.1)"; e.currentTarget.style.borderColor = "rgba(197,168,90,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor = "rgba(197,168,90,0.2)"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{ fontSize: "28px", marginBottom: "10px" }}>{s.icon}</div>
+                  <div style={{ color: "#fff", fontSize: "15px", fontWeight: "bold", marginBottom: "4px" }}>{s.nombre}</div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "12px", marginBottom: "6px" }}>{s.descripcion}</div>
+                  <div style={{ color: "#c5a85a", fontSize: "11px", letterSpacing: "0.05em" }}>⏱ {s.duracion}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PASO 2: Fecha y hora */}
+        {!enviado && paso === 2 && (
+          <div>
+            <button onClick={() => setPaso(1)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", marginBottom: "16px", fontSize: "13px", padding: 0 }}>
+              ← Volver
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "22px" }}>{servicio?.icon}</span>
+              <h1 style={{ color: "#fff", fontSize: "22px", fontWeight: "normal", margin: 0 }}>{servicio?.nombre}</h1>
+            </div>
+            <p style={{ color: "rgba(255,255,255,0.45)", marginBottom: "28px", fontSize: "14px" }}>Elegí el día y horario</p>
+
+            {/* Días */}
+            <div style={{ overflowX: "auto", paddingBottom: "12px", marginBottom: "28px" }}>
+              <div style={{ display: "flex", gap: "10px", minWidth: "max-content" }}>
+                {dias.map(d => (
+                  <button key={d.key} onClick={() => setDiaSeleccionado(d)}
+                    style={{
+                      background: diaSeleccionado?.key === d.key ? "linear-gradient(135deg, #c5a85a, #e8d08a)" : "rgba(255,255,255,0.05)",
+                      border: "1px solid " + (diaSeleccionado?.key === d.key ? "transparent" : "rgba(197,168,90,0.2)"),
+                      borderRadius: "14px",
+                      padding: "14px 16px",
+                      cursor: "pointer",
+                      textAlign: "center",
+                      minWidth: "64px",
+                      transition: "all 0.2s",
+                    }}>
+                    <div style={{ color: diaSeleccionado?.key === d.key ? "#1a0533" : "rgba(255,255,255,0.5)", fontSize: "11px", letterSpacing: "0.05em", textTransform: "uppercase" }}>{d.dia}</div>
+                    <div style={{ color: diaSeleccionado?.key === d.key ? "#1a0533" : "#fff", fontSize: "22px", fontWeight: "bold", margin: "4px 0" }}>{d.numero}</div>
+                    <div style={{ color: diaSeleccionado?.key === d.key ? "#1a0533" : "rgba(255,255,255,0.4)", fontSize: "11px" }}>{d.mes}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Horarios */}
+            {diaSeleccionado && (
+              <div>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px", marginBottom: "14px", letterSpacing: "0.05em" }}>
+                  HORARIOS DISPONIBLES · {diaSeleccionado.esSabado ? "Sáb 9 a 13hs" : "L-V 9:30–13:30 y 17–20hs"}
+                </p>
+
+                {diaSeleccionado.esSabado ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "28px" }}>
+                    {HORARIOS_SABADO.map(h => {
+                      const ocupado = OCUPADOS.includes(h);
+                      const sel = horario === h;
+                      return (
+                        <button key={h} disabled={ocupado} onClick={() => setHorario(h)}
+                          style={{
+                            background: sel ? "linear-gradient(135deg, #c5a85a, #e8d08a)" : ocupado ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)",
+                            border: "1px solid " + (sel ? "transparent" : ocupado ? "rgba(255,255,255,0.05)" : "rgba(197,168,90,0.2)"),
+                            borderRadius: "10px", padding: "12px 8px",
+                            color: sel ? "#1a0533" : ocupado ? "rgba(255,255,255,0.2)" : "#fff",
+                            cursor: ocupado ? "not-allowed" : "pointer",
+                            fontSize: "14px", fontWeight: sel ? "bold" : "normal",
+                            textDecoration: ocupado ? "line-through" : "none",
+                            transition: "all 0.2s",
+                          }}>{h}</button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <>
+                    <p style={{ color: "rgba(197,168,90,0.6)", fontSize: "11px", letterSpacing: "0.08em", marginBottom: "10px" }}>MAÑANA</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "18px" }}>
+                      {HORARIOS_SEMANA.slice(0, 8).map(h => {
+                        const ocupado = OCUPADOS.includes(h);
+                        const sel = horario === h;
+                        return (
+                          <button key={h} disabled={ocupado} onClick={() => setHorario(h)}
+                            style={{
+                              background: sel ? "linear-gradient(135deg, #c5a85a, #e8d08a)" : ocupado ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)",
+                              border: "1px solid " + (sel ? "transparent" : ocupado ? "rgba(255,255,255,0.05)" : "rgba(197,168,90,0.2)"),
+                              borderRadius: "10px", padding: "12px 8px",
+                              color: sel ? "#1a0533" : ocupado ? "rgba(255,255,255,0.2)" : "#fff",
+                              cursor: ocupado ? "not-allowed" : "pointer",
+                              fontSize: "14px", fontWeight: sel ? "bold" : "normal",
+                              textDecoration: ocupado ? "line-through" : "none",
+                              transition: "all 0.2s",
+                            }}>{h}</button>
+                        );
+                      })}
+                    </div>
+                    <p style={{ color: "rgba(197,168,90,0.6)", fontSize: "11px", letterSpacing: "0.08em", marginBottom: "10px" }}>TARDE</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "28px" }}>
+                      {HORARIOS_SEMANA.slice(8).map(h => {
+                        const ocupado = OCUPADOS.includes(h);
+                        const sel = horario === h;
+                        return (
+                          <button key={h} disabled={ocupado} onClick={() => setHorario(h)}
+                            style={{
+                              background: sel ? "linear-gradient(135deg, #c5a85a, #e8d08a)" : ocupado ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)",
+                              border: "1px solid " + (sel ? "transparent" : ocupado ? "rgba(255,255,255,0.05)" : "rgba(197,168,90,0.2)"),
+                              borderRadius: "10px", padding: "12px 8px",
+                              color: sel ? "#1a0533" : ocupado ? "rgba(255,255,255,0.2)" : "#fff",
+                              cursor: ocupado ? "not-allowed" : "pointer",
+                              fontSize: "14px", fontWeight: sel ? "bold" : "normal",
+                              textDecoration: ocupado ? "line-through" : "none",
+                              transition: "all 0.2s",
+                            }}>{h}</button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                {horario && (
+                  <button onClick={() => setPaso(3)}
+                    style={{
+                      width: "100%",
+                      background: "linear-gradient(135deg, #c5a85a, #e8d08a)",
+                      border: "none", borderRadius: "14px", padding: "16px",
+                      color: "#1a0533", fontSize: "16px", fontWeight: "bold",
+                      cursor: "pointer", letterSpacing: "0.03em",
+                    }}>
+                    Continuar → {diaSeleccionado.dia} {diaSeleccionado.numero} a las {horario}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PASO 3: Datos */}
+        {!enviado && paso === 3 && (
+          <div>
+            <button onClick={() => setPaso(2)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", marginBottom: "16px", fontSize: "13px", padding: 0 }}>
+              ← Volver
+            </button>
+            <h1 style={{ color: "#fff", fontSize: "22px", fontWeight: "normal", marginBottom: "6px" }}>Datos del turno</h1>
+            <p style={{ color: "rgba(255,255,255,0.45)", marginBottom: "28px", fontSize: "14px" }}>Completá la información de tu mascota</p>
+
+            {[
+              { label: "Tu nombre completo", name: "nombre", type: "text", placeholder: "Juan García" },
+              { label: "WhatsApp / Teléfono", name: "telefono", type: "tel", placeholder: "11 1234-5678 (sin 0 ni 15)" },
+              { label: "Email", name: "email", type: "email", placeholder: "juan@email.com" },
+              { label: "Nombre de tu mascota", name: "mascota", type: "text", placeholder: "Firulais" },
+            ].map(f => (
+              <div key={f.name} style={{ marginBottom: "18px" }}>
+                <label style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>{f.label.toUpperCase()}</label>
+                <input name={f.name} type={f.type} placeholder={f.placeholder} value={form[f.name]} onChange={handleForm}
+                  style={{
+                    width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(197,168,90,0.25)",
+                    borderRadius: "12px", padding: "14px 16px", color: "#fff", fontSize: "15px",
+                    outline: "none", boxSizing: "border-box",
+                  }} />
+              </div>
+            ))}
+
+            <div style={{ marginBottom: "18px" }}>
+              <label style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>ESPECIE</label>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {["perro", "gato"].map(e => (
+                  <button key={e} onClick={() => setForm({ ...form, especie: e })}
+                    style={{
+                      flex: 1, background: form.especie === e ? "linear-gradient(135deg, #c5a85a, #e8d08a)" : "rgba(255,255,255,0.06)",
+                      border: "1px solid " + (form.especie === e ? "transparent" : "rgba(197,168,90,0.2)"),
+                      borderRadius: "12px", padding: "12px", color: form.especie === e ? "#1a0533" : "#fff",
+                      cursor: "pointer", fontSize: "14px", fontWeight: form.especie === e ? "bold" : "normal",
+                      textTransform: "capitalize",
+                    }}>
+                    {e === "perro" ? "🐶" : "🐱"} {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "18px" }}>
+              <div>
+                <label style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>RAZA</label>
+                <input name="raza" placeholder="Golden Retriever" value={form.raza} onChange={handleForm}
+                  style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(197,168,90,0.25)", borderRadius: "12px", padding: "14px 16px", color: "#fff", fontSize: "15px", outline: "none", boxSizing: "border-box" }} />
+              </div>
+              <div>
+                <label style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>EDAD</label>
+                <input name="edad" placeholder="3 años" value={form.edad} onChange={handleForm}
+                  style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(197,168,90,0.25)", borderRadius: "12px", padding: "14px 16px", color: "#fff", fontSize: "15px", outline: "none", boxSizing: "border-box" }} />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "28px" }}>
+              <label style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", letterSpacing: "0.08em", display: "block", marginBottom: "8px" }}>MOTIVO / NOTAS (opcional)</label>
+              <textarea name="notas" placeholder="Contanos brevemente el motivo de la consulta..." value={form.notas} onChange={handleForm} rows={3}
+                style={{ width: "100%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(197,168,90,0.25)", borderRadius: "12px", padding: "14px 16px", color: "#fff", fontSize: "15px", outline: "none", boxSizing: "border-box", resize: "none", fontFamily: "inherit" }} />
+            </div>
+
+            <button onClick={() => setPaso(4)} disabled={!form.nombre || !form.telefono || !form.mascota}
+              style={{
+                width: "100%", background: !form.nombre || !form.telefono || !form.mascota ? "rgba(197,168,90,0.3)" : "linear-gradient(135deg, #c5a85a, #e8d08a)",
+                border: "none", borderRadius: "14px", padding: "16px",
+                color: !form.nombre || !form.telefono || !form.mascota ? "rgba(255,255,255,0.3)" : "#1a0533",
+                fontSize: "16px", fontWeight: "bold", cursor: !form.nombre || !form.telefono || !form.mascota ? "not-allowed" : "pointer",
+              }}>
+              Revisar turno →
+            </button>
+          </div>
+        )}
+
+        {/* PASO 4: Confirmación */}
+        {!enviado && paso === 4 && (
+          <div>
+            <button onClick={() => setPaso(3)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", marginBottom: "16px", fontSize: "13px", padding: 0 }}>
+              ← Volver
+            </button>
+            <h1 style={{ color: "#fff", fontSize: "22px", fontWeight: "normal", marginBottom: "6px" }}>Revisá tu turno</h1>
+            <p style={{ color: "rgba(255,255,255,0.45)", marginBottom: "28px", fontSize: "14px" }}>Confirmá los datos antes de reservar</p>
+
+            <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(197,168,90,0.25)", borderRadius: "20px", padding: "24px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px", paddingBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                <span style={{ fontSize: "32px" }}>{servicio?.icon}</span>
+                <div>
+                  <div style={{ color: "#c5a85a", fontSize: "18px", fontWeight: "bold" }}>{servicio?.nombre}</div>
+                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px" }}>{servicio?.duracion}</div>
+                </div>
+              </div>
+
+              {[
+                { label: "📅 Fecha", valor: `${diaSeleccionado?.dia} ${diaSeleccionado?.numero} de ${diaSeleccionado?.mes}` },
+                { label: "🕐 Horario", valor: horario },
+                { label: "👤 Titular", valor: form.nombre },
+                { label: "📱 WhatsApp", valor: form.telefono },
+                { label: "🐾 Mascota", valor: `${form.mascota} (${form.especie}${form.raza ? `, ${form.raza}` : ""}${form.edad ? `, ${form.edad}` : ""})` },
+                ...(form.notas ? [{ label: "📝 Notas", valor: form.notas }] : []),
+              ].map(({ label, valor }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
+                  <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px" }}>{label}</span>
+                  <span style={{ color: "#fff", fontSize: "14px", textAlign: "right", maxWidth: "60%" }}>{valor}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: "rgba(197,168,90,0.08)", border: "1px solid rgba(197,168,90,0.2)", borderRadius: "12px", padding: "14px 16px", marginBottom: "24px" }}>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", margin: 0, lineHeight: "1.6" }}>
+                📧 Recibirás un email de confirmación con los datos del turno.
+              </p>
+            </div>
+
+            <button onClick={confirmar} disabled={enviando}
+              style={{
+                width: "100%", background: enviando ? "rgba(197,168,90,0.4)" : "linear-gradient(135deg, #c5a85a, #e8d08a)",
+                border: "none", borderRadius: "14px", padding: "18px",
+                color: "#1a0533", fontSize: "17px", fontWeight: "bold",
+                cursor: enviando ? "wait" : "pointer",
+                boxShadow: "0 8px 32px rgba(197,168,90,0.35)",
+                letterSpacing: "0.02em",
+              }}>
+              {enviando ? "Guardando turno..." : "✓ Confirmar turno"}
+            </button>
+          </div>
+        )}
+
+        {/* CONFIRMADO */}
+        {enviado && (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <div style={{
+              width: "90px", height: "90px", borderRadius: "50%",
+              background: "linear-gradient(135deg, #c5a85a, #e8d08a)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "40px", margin: "0 auto 24px",
+              boxShadow: "0 0 60px rgba(197,168,90,0.5)",
+            }}>✓</div>
+            <h1 style={{ color: "#fff", fontSize: "26px", fontWeight: "normal", marginBottom: "10px" }}>¡Turno reservado!</h1>
+            <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "15px", marginBottom: "32px", lineHeight: "1.6" }}>
+              Te esperamos el <strong style={{ color: "#c5a85a" }}>{diaSeleccionado?.dia} {diaSeleccionado?.numero}</strong> a las <strong style={{ color: "#c5a85a" }}>{horario}</strong>.<br />
+              En breve te confirmamos por WhatsApp.
+            </p>
+
+            <div style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(197,168,90,0.2)", borderRadius: "16px", padding: "20px", marginBottom: "28px", textAlign: "left" }}>
+              <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "11px", letterSpacing: "0.1em", marginBottom: "12px" }}>RESUMEN</div>
+              <div style={{ color: "#c5a85a", fontSize: "16px", fontWeight: "bold" }}>{form.mascota}</div>
+              <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px" }}>{servicio?.nombre} · {diaSeleccionado?.dia} {diaSeleccionado?.numero} · {horario}</div>
+            </div>
+
+            <button onClick={resetear}
+              style={{
+                background: "rgba(255,255,255,0.08)", border: "1px solid rgba(197,168,90,0.2)",
+                borderRadius: "12px", padding: "14px 28px",
+                color: "rgba(255,255,255,0.7)", fontSize: "14px", cursor: "pointer",
+              }}>
+              Reservar otro turno
+            </button>
+          </div>
+        )}
+
+      </main>
+
+      {/* Footer */}
+      <footer style={{
+        borderTop: "1px solid rgba(197,168,90,0.15)",
+        background: "rgba(0,0,0,0.2)",
+        padding: "24px 20px",
+        textAlign: "center",
+      }}>
+        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "12px" }}>
+            <img src={LOGO} alt="Dinu" style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#fff", objectFit: "cover" }} />
+            <div style={{ color: "#c5a85a", fontSize: "14px", fontWeight: "bold" }}>Dinu Veterinaria</div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap" }}>
+            <a href="https://maps.google.com/?q=Av.+San+Martín+3988+Rafael+Calzada" target="_blank" rel="noreferrer"
+              style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px", textDecoration: "none", display: "flex", alignItems: "center", gap: "5px" }}>
+              📍 Av. San Martín 3988, Rafael Calzada
+            </a>
+            <a href="https://wa.me/541131774222" target="_blank" rel="noreferrer"
+              style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px", textDecoration: "none", display: "flex", alignItems: "center", gap: "5px" }}>
+              💬 11 3177-4222
+            </a>
+            <a href="https://instagram.com/dinutiendademascotas" target="_blank" rel="noreferrer"
+              style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px", textDecoration: "none", display: "flex", alignItems: "center", gap: "5px" }}>
+              📸 @dinutiendademascotas
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
