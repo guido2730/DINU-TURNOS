@@ -451,3 +451,141 @@ document.getElementById("passInput").focus?.();
 </script>
 </body>
 </html>
+  grid.innerHTML = "";
+
+  for (let i = 0; i < 6; i++) {
+    const dia = new Date(lunes); dia.setDate(lunes.getDate() + i);
+    const key  = toKey(dia);
+    const esHoy = key === hoyKey;
+
+    const col = document.createElement("div");
+    col.className = "day-col";
+
+    const hdr = document.createElement("div");
+    hdr.className = "day-header" + (esHoy ? " today" : "");
+    hdr.innerHTML = `<div class="day-name">${DIAS[i]}</div><div class="day-num">${dia.getDate()}</div><div class="day-mes">${MESES[dia.getMonth()]}</div>`;
+    col.appendChild(hdr);
+
+    if (loading) {
+      const l = document.createElement("div");
+      l.className = "loading-day"; l.textContent = "cargando...";
+      col.appendChild(l);
+    } else {
+      const dayTurnos = turnosData.filter(t => t.fecha === key).sort((a,b) => a.horario.localeCompare(b.horario));
+      if (dayTurnos.length === 0) {
+        const em = document.createElement("div");
+        em.className = "empty-day"; em.textContent = "sin turnos";
+        col.appendChild(em);
+      } else {
+        dayTurnos.forEach(t => {
+          const card = document.createElement("div");
+          const svc = t.titulo.split(" — ")[0].toLowerCase().replace("consulta clínica","clinica").replace("vacunación","vacuna").replace("cirugía","cirugia");
+          card.className = "turno-card " + (svc.includes("vacun") ? "vacuna" : svc.includes("cirug") ? "cirugia" : "clinica");
+          const mascotaInfo = t.titulo.split(" — ")[1] || "";
+          card.innerHTML = `
+            <div class="turno-hora">${t.horario}</div>
+            <div class="turno-servicio">${t.titulo.split(" — ")[0]}</div>
+            <div class="turno-mascota">${mascotaInfo}</div>
+            <div class="turno-owner">${t.nombre}</div>`;
+          card.onclick = () => abrirModal(t);
+          col.appendChild(card);
+        });
+      }
+    }
+    grid.appendChild(col);
+  }
+}
+
+function actualizarStats(lunes) {
+  const hoyKey = toKey(new Date());
+  const semanaKeys = [];
+  for (let i=0;i<6;i++) { const d=new Date(lunes); d.setDate(lunes.getDate()+i); semanaKeys.push(toKey(d)); }
+
+  document.getElementById("statHoy").textContent    = turnosData.filter(t=>t.fecha===hoyKey).length;
+  document.getElementById("statSemana").textContent  = turnosData.filter(t=>semanaKeys.includes(t.fecha)).length;
+  document.getElementById("statClinica").textContent = turnosData.filter(t=>t.titulo.toLowerCase().includes("consulta")).length;
+  document.getElementById("statVacuna").textContent  = turnosData.filter(t=>t.titulo.toLowerCase().includes("vacun")).length;
+  document.getElementById("statCirugia").textContent = turnosData.filter(t=>t.titulo.toLowerCase().includes("cirug")).length;
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function abrirModal(t) {
+  turnoActivo = t;
+  document.getElementById("modalTitle").textContent = t.titulo.split(" — ")[0];
+  document.getElementById("reprogForm").style.display = "none";
+
+  const rows = [
+    ["🐾 Mascota", t.titulo.split(" — ")[1] || "—"],
+    ["📅 Fecha",   t.fecha.split("-").reverse().join("/")],
+    ["🕐 Horario", t.horario],
+    ["divider", ""],
+    ["👤 Titular", t.nombre || "—"],
+    ["📱 WhatsApp", t.telefono || "—"],
+    ["📧 Email",   t.email || "—"],
+    ...(t.notas ? [["📝 Notas", t.notas]] : []),
+  ];
+
+  document.getElementById("modalInfo").innerHTML = rows.map(([l,v]) =>
+    l==="divider"
+      ? `<div class="modal-divider"></div>`
+      : `<div class="modal-row"><span class="modal-label">${l}</span><span class="modal-val">${v}</span></div>`
+  ).join("");
+
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function cerrarModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+  turnoActivo = null;
+}
+
+function toggleReprog() {
+  const f = document.getElementById("reprogForm");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+  if (f.style.display === "block") {
+    document.getElementById("reprogFecha").value    = turnoActivo?.fecha || "";
+    document.getElementById("reprogHorario").value  = turnoActivo?.horario || "";
+  }
+}
+
+// ── ACCIONES ─────────────────────────────────────────────────
+async function cancelarTurno() {
+  if (!turnoActivo) return;
+  if (!confirm(`¿Cancelar el turno de ${turnoActivo.titulo.split(" — ")[1] || "esta mascota"}?`)) return;
+
+  try {
+    await fetch(`/api/cancelar?eventoId=${encodeURIComponent(turnoActivo.id)}`, { method:"GET", mode:"cors" });
+    mostrarToast("✅ Turno cancelado");
+    cerrarModal();
+    cargarSemana();
+  } catch(e) { mostrarToast("❌ Error al cancelar"); }
+}
+
+async function confirmarReprog() {
+  if (!turnoActivo) return;
+  const fecha   = document.getElementById("reprogFecha").value;
+  const horario = document.getElementById("reprogHorario").value.slice(0,5);
+  if (!fecha || !horario) { mostrarToast("Completá fecha y horario"); return; }
+
+  try {
+    const url = `/api/reprogramar?eventoId=${encodeURIComponent(turnoActivo.id)}&fecha=${fecha}&horario=${horario}`;
+    await fetch(url, { method:"GET", mode:"cors" });
+    mostrarToast("✅ Turno reprogramado");
+    cerrarModal();
+    cargarSemana();
+  } catch(e) { mostrarToast("❌ Error al reprogramar"); }
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+document.getElementById("modalOverlay").addEventListener("click", e => {
+  if (e.target === document.getElementById("modalOverlay")) cerrarModal();
+});
+document.getElementById("passInput").focus?.();
+</script>
+</body>
+</html>
