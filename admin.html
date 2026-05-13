@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dinu Admin — Panel de Turnos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:#0e0220; color:#fff; min-height:100vh; }
+
+/* LOGIN */
+.login-wrap {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,#0e0220,#1e0545,#0e0220);
+}
+.login-card {
+  background:rgba(255,255,255,0.05); border:1px solid rgba(197,168,90,0.25);
+  border-radius:24px; padding:48px 40px; width:360px; text-align:center;
+}
+.login-logo { width:80px; height:80px; border-radius:50%; background:#fff; overflow:hidden; margin:0 auto 20px; border:2px solid rgba(197,168,90,0.4); }
+.login-logo img { width:100%; height:100%; object-fit:cover; }
+.login-title { font-family:'Playfair Display',serif; font-size:22px; color:#c5a85a; margin-bottom:6px; }
+.login-sub { color:rgba(255,255,255,0.4); font-size:13px; margin-bottom:32px; }
+.login-input {
+  width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(197,168,90,0.2);
+  border-radius:12px; padding:14px 16px; color:#fff; font-size:15px; outline:none;
+  margin-bottom:16px; font-family:'Inter',sans-serif;
+}
+.login-btn {
+  width:100%; background:linear-gradient(135deg,#c5a85a,#e8d08a); border:none;
+  border-radius:12px; padding:14px; color:#1a0533; font-size:15px; font-weight:600;
+  cursor:pointer; font-family:'Inter',sans-serif;
+}
+.login-error { color:#ff6b6b; font-size:13px; margin-top:10px; display:none; }
+
+/* PANEL */
+.panel { display:none; min-height:100vh; flex-direction:column; }
+
+/* HEADER */
+.header {
+  background:rgba(255,255,255,0.03); border-bottom:1px solid rgba(197,168,90,0.15);
+  padding:16px 28px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100; backdrop-filter:blur(20px);
+}
+.header-left { display:flex; align-items:center; gap:12px; }
+.header-logo { width:40px; height:40px; border-radius:50%; background:#fff; overflow:hidden; border:1.5px solid rgba(197,168,90,0.3); }
+.header-logo img { width:100%; height:100%; object-fit:cover; }
+.header-title { font-family:'Playfair Display',serif; color:#c5a85a; font-size:17px; }
+.header-sub { color:rgba(255,255,255,0.35); font-size:11px; letter-spacing:0.1em; }
+.week-nav { display:flex; align-items:center; gap:16px; }
+.week-label { color:#fff; font-size:14px; font-weight:500; min-width:200px; text-align:center; }
+.nav-btn {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(197,168,90,0.2);
+  color:#c5a85a; width:36px; height:36px; border-radius:10px; cursor:pointer;
+  font-size:16px; display:flex; align-items:center; justify-content:center;
+}
+.nav-btn:hover { background:rgba(197,168,90,0.1); }
+.logout-btn {
+  background:none; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.4);
+  padding:8px 16px; border-radius:8px; cursor:pointer; font-size:12px; font-family:'Inter',sans-serif;
+}
+
+/* STATS BAR */
+.stats-bar {
+  display:flex; gap:0; border-bottom:1px solid rgba(197,168,90,0.1);
+  background:rgba(0,0,0,0.2);
+}
+.stat {
+  flex:1; padding:14px 20px; text-align:center;
+  border-right:1px solid rgba(197,168,90,0.08);
+}
+.stat:last-child { border-right:none; }
+.stat-num { font-size:22px; font-weight:600; color:#c5a85a; }
+.stat-label { font-size:11px; color:rgba(255,255,255,0.35); letter-spacing:0.08em; margin-top:2px; }
+
+/* CALENDAR GRID */
+.calendar { flex:1; padding:24px 20px; overflow-x:auto; }
+.week-grid {
+  display:grid; grid-template-columns:repeat(6,1fr); gap:12px;
+  min-width:900px;
+}
+.day-col { display:flex; flex-direction:column; gap:8px; }
+.day-header {
+  text-align:center; padding:12px 8px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(197,168,90,0.12);
+  border-radius:12px;
+}
+.day-name { font-size:11px; letter-spacing:0.1em; color:rgba(255,255,255,0.4); text-transform:uppercase; }
+.day-num { font-size:24px; font-weight:600; color:#fff; margin:2px 0; }
+.day-mes { font-size:11px; color:rgba(255,255,255,0.3); }
+.day-header.today { background:rgba(197,168,90,0.1); border-color:rgba(197,168,90,0.35); }
+.day-header.today .day-num { color:#c5a85a; }
+
+.empty-day {
+  flex:1; min-height:80px; display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,0.1); font-size:12px;
+}
+
+/* APPOINTMENT CARDS */
+.turno-card {
+  background:rgba(255,255,255,0.05); border:1px solid rgba(197,168,90,0.15);
+  border-radius:12px; padding:14px; cursor:pointer; transition:all 0.2s;
+  border-left:3px solid #c5a85a;
+}
+.turno-card:hover { background:rgba(197,168,90,0.08); transform:translateY(-1px); }
+.turno-card.clinica { border-left-color:#7c5cbf; }
+.turno-card.vacuna { border-left-color:#4caf7d; }
+.turno-card.cirugia { border-left-color:#e57373; }
+.turno-hora { font-size:13px; font-weight:600; color:#c5a85a; margin-bottom:4px; }
+.turno-servicio { font-size:11px; color:rgba(255,255,255,0.4); letter-spacing:0.05em; margin-bottom:6px; text-transform:uppercase; }
+.turno-mascota { font-size:14px; font-weight:500; color:#fff; }
+.turno-owner { font-size:12px; color:rgba(255,255,255,0.45); margin-top:2px; }
+
+/* LOADING */
+.loading-day {
+  background:rgba(255,255,255,0.03); border:1px dashed rgba(197,168,90,0.1);
+  border-radius:12px; padding:14px; text-align:center;
+  color:rgba(255,255,255,0.2); font-size:12px; min-height:60px;
+  display:flex; align-items:center; justify-content:center;
+}
+
+/* MODAL */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  z-index:1000; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:#1a0533; border:1px solid rgba(197,168,90,0.25); border-radius:24px;
+  padding:32px; width:100%; max-width:460px; position:relative;
+}
+.modal-close {
+  position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.06);
+  border:none; color:rgba(255,255,255,0.5); width:32px; height:32px; border-radius:8px;
+  cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;
+}
+.modal-title { font-family:'Playfair Display',serif; font-size:20px; color:#c5a85a; margin-bottom:20px; }
+.modal-info { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+.modal-row { display:flex; justify-content:space-between; align-items:center; }
+.modal-label { font-size:12px; color:rgba(255,255,255,0.4); }
+.modal-val { font-size:14px; color:#fff; font-weight:500; }
+.modal-divider { height:1px; background:rgba(255,255,255,0.06); margin:4px 0; }
+.modal-actions { display:flex; gap:10px; }
+.btn-cancel {
+  flex:1; background:rgba(229,115,115,0.15); border:1px solid rgba(229,115,115,0.3);
+  color:#e57373; padding:12px; border-radius:12px; cursor:pointer; font-size:14px;
+  font-family:'Inter',sans-serif; font-weight:500;
+}
+.btn-cancel:hover { background:rgba(229,115,115,0.25); }
+.btn-reprog {
+  flex:1; background:rgba(197,168,90,0.15); border:1px solid rgba(197,168,90,0.3);
+  color:#c5a85a; padding:12px; border-radius:12px; cursor:pointer; font-size:14px;
+  font-family:'Inter',sans-serif; font-weight:500;
+}
+.btn-reprog:hover { background:rgba(197,168,90,0.25); }
+
+/* REPROG FORM */
+.reprog-form { display:none; margin-top:20px; border-top:1px solid rgba(255,255,255,0.06); padding-top:20px; }
+.reprog-label { font-size:12px; color:rgba(255,255,255,0.4); letter-spacing:0.08em; display:block; margin-bottom:8px; }
+.reprog-input {
+  width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(197,168,90,0.2);
+  border-radius:10px; padding:12px 14px; color:#fff; font-size:14px; outline:none;
+  margin-bottom:14px; font-family:'Inter',sans-serif;
+}
+.btn-confirm-reprog {
+  width:100%; background:linear-gradient(135deg,#c5a85a,#e8d08a); border:none;
+  border-radius:12px; padding:13px; color:#1a0533; font-size:14px; font-weight:600;
+  cursor:pointer; font-family:'Inter',sans-serif;
+}
+
+/* TOAST */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:#1e0545; border:1px solid rgba(197,168,90,0.3); border-radius:12px;
+  padding:14px 24px; font-size:14px; color:#fff; z-index:2000;
+  opacity:0; transition:opacity 0.3s; pointer-events:none;
+}
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-logo"><img src="data:image/jpeg;base64,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" alt="Dinu"/></div>
+    <div class="login-title">Panel Administrativo</div>
+    <div class="login-sub">Dinu Veterinaria · Rafael Calzada</div>
+    <input class="login-input" type="password" id="passInput" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="loginError">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panel">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo"><img src="data:image/jpeg;base64,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" alt="Dinu"/></div>
+      <div>
+        <div class="header-title">Dinu Admin</div>
+        <div class="header-sub">PANEL DE TURNOS</div>
+      </div>
+    </div>
+    <div class="week-nav">
+      <button class="nav-btn" onclick="cambiarSemana(-1)">‹</button>
+      <div class="week-label" id="weekLabel">—</div>
+      <button class="nav-btn" onclick="cambiarSemana(1)">›</button>
+    </div>
+    <button class="logout-btn" onclick="logout()">Salir</button>
+  </div>
+
+  <div class="stats-bar" id="statsBar">
+    <div class="stat"><div class="stat-num" id="statHoy">—</div><div class="stat-label">HOY</div></div>
+    <div class="stat"><div class="stat-num" id="statSemana">—</div><div class="stat-label">ESTA SEMANA</div></div>
+    <div class="stat"><div class="stat-num" id="statClinica">—</div><div class="stat-label">CONSULTAS</div></div>
+    <div class="stat"><div class="stat-num" id="statVacuna">—</div><div class="stat-label">VACUNACIONES</div></div>
+    <div class="stat"><div class="stat-num" id="statCirugia">—</div><div class="stat-label">CIRUGÍAS</div></div>
+  </div>
+
+  <div class="calendar">
+    <div class="week-grid" id="weekGrid"></div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="cerrarModal()">✕</button>
+    <div class="modal-title" id="modalTitle">Detalle del turno</div>
+    <div class="modal-info" id="modalInfo"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cancelarTurno()">🗑 Cancelar turno</button>
+      <button class="btn-reprog" onclick="toggleReprog()">📅 Reprogramar</button>
+    </div>
+    <div class="reprog-form" id="reprogForm">
+      <label class="reprog-label">NUEVA FECHA</label>
+      <input class="reprog-input" type="date" id="reprogFecha"/>
+      <label class="reprog-label">NUEVO HORARIO</label>
+      <input class="reprog-input" type="time" id="reprogHorario" step="1800"/>
+      <button class="btn-confirm-reprog" onclick="confirmarReprog()">Confirmar reprogramación</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PASSWORD   = "dinu2024";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyoZMWoiMutNpY8wpJkrdQ0CV_EmaNzmddagEmDhIG0LWwhhBCvZI_YUIL-NlrZIum7Pg/exec";
+
+const DIAS   = ["Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MESES  = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+let semanaOffset = 0;
+let turnosData   = [];
+let turnoActivo  = null;
+
+// ── LOGIN ────────────────────────────────────────────────────
+function doLogin() {
+  const val = document.getElementById("passInput").value;
+  if (val === PASSWORD) {
+    document.getElementById("loginWrap").style.display = "none";
+    document.getElementById("panel").style.display = "flex";
+    cargarSemana();
+  } else {
+    document.getElementById("loginError").style.display = "block";
+  }
+}
+function logout() {
+  document.getElementById("loginWrap").style.display = "flex";
+  document.getElementById("panel").style.display = "none";
+  document.getElementById("passInput").value = "";
+}
+
+// ── SEMANA ───────────────────────────────────────────────────
+function getLunes(offset) {
+  const hoy = new Date();
+  const dia = hoy.getDay() || 7;
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - dia + 1 + offset * 7);
+  lunes.setHours(0,0,0,0);
+  return lunes;
+}
+function toKey(date) {
+  return date.toISOString().split("T")[0];
+}
+function cambiarSemana(dir) { semanaOffset += dir; cargarSemana(); }
+
+async function cargarSemana() {
+  const lunes = getLunes(semanaOffset);
+  const sabado = new Date(lunes); sabado.setDate(lunes.getDate() + 5);
+
+  const fmt = d => `${d.getDate()} ${MESES[d.getMonth()]}`;
+  document.getElementById("weekLabel").textContent = `${fmt(lunes)} — ${fmt(sabado)} ${sabado.getFullYear()}`;
+
+  renderGrid(lunes, true);
+
+  try {
+    const res = await fetch(`/api/turnos?fechaInicio=${toKey(lunes)}`);
+    const data = await res.json();
+    if (data.ok) {
+      turnosData = data.turnos;
+      renderGrid(lunes, false);
+      actualizarStats(lunes);
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderGrid(lunes, loading) {
+  const grid = document.getElementById("weekGrid");
+  const hoyKey = toKey(new Date());
+  grid.innerHTML = "";
+
+  for (let i = 0; i < 6; i++) {
+    const dia = new Date(lunes); dia.setDate(lunes.getDate() + i);
+    const key  = toKey(dia);
+    const esHoy = key === hoyKey;
+
+    const col = document.createElement("div");
+    col.className = "day-col";
+
+    const hdr = document.createElement("div");
+    hdr.className = "day-header" + (esHoy ? " today" : "");
+    hdr.innerHTML = `<div class="day-name">${DIAS[i]}</div><div class="day-num">${dia.getDate()}</div><div class="day-mes">${MESES[dia.getMonth()]}</div>`;
+    col.appendChild(hdr);
+
+    if (loading) {
+      const l = document.createElement("div");
+      l.className = "loading-day"; l.textContent = "cargando...";
+      col.appendChild(l);
+    } else {
+      const dayTurnos = turnosData.filter(t => t.fecha === key).sort((a,b) => a.horario.localeCompare(b.horario));
+      if (dayTurnos.length === 0) {
+        const em = document.createElement("div");
+        em.className = "empty-day"; em.textContent = "sin turnos";
+        col.appendChild(em);
+      } else {
+        dayTurnos.forEach(t => {
+          const card = document.createElement("div");
+          const svc = t.titulo.split(" — ")[0].toLowerCase().replace("consulta clínica","clinica").replace("vacunación","vacuna").replace("cirugía","cirugia");
+          card.className = "turno-card " + (svc.includes("vacun") ? "vacuna" : svc.includes("cirug") ? "cirugia" : "clinica");
+          const mascotaInfo = t.titulo.split(" — ")[1] || "";
+          card.innerHTML = `
+            <div class="turno-hora">${t.horario}</div>
+            <div class="turno-servicio">${t.titulo.split(" — ")[0]}</div>
+            <div class="turno-mascota">${mascotaInfo}</div>
+            <div class="turno-owner">${t.nombre}</div>`;
+          card.onclick = () => abrirModal(t);
+          col.appendChild(card);
+        });
+      }
+    }
+    grid.appendChild(col);
+  }
+}
+
+function actualizarStats(lunes) {
+  const hoyKey = toKey(new Date());
+  const semanaKeys = [];
+  for (let i=0;i<6;i++) { const d=new Date(lunes); d.setDate(lunes.getDate()+i); semanaKeys.push(toKey(d)); }
+
+  document.getElementById("statHoy").textContent    = turnosData.filter(t=>t.fecha===hoyKey).length;
+  document.getElementById("statSemana").textContent  = turnosData.filter(t=>semanaKeys.includes(t.fecha)).length;
+  document.getElementById("statClinica").textContent = turnosData.filter(t=>t.titulo.toLowerCase().includes("consulta")).length;
+  document.getElementById("statVacuna").textContent  = turnosData.filter(t=>t.titulo.toLowerCase().includes("vacun")).length;
+  document.getElementById("statCirugia").textContent = turnosData.filter(t=>t.titulo.toLowerCase().includes("cirug")).length;
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function abrirModal(t) {
+  turnoActivo = t;
+  document.getElementById("modalTitle").textContent = t.titulo.split(" — ")[0];
+  document.getElementById("reprogForm").style.display = "none";
+
+  const rows = [
+    ["🐾 Mascota", t.titulo.split(" — ")[1] || "—"],
+    ["📅 Fecha",   t.fecha.split("-").reverse().join("/")],
+    ["🕐 Horario", t.horario],
+    ["divider", ""],
+    ["👤 Titular", t.nombre || "—"],
+    ["📱 WhatsApp", t.telefono || "—"],
+    ["📧 Email",   t.email || "—"],
+    ...(t.notas ? [["📝 Notas", t.notas]] : []),
+  ];
+
+  document.getElementById("modalInfo").innerHTML = rows.map(([l,v]) =>
+    l==="divider"
+      ? `<div class="modal-divider"></div>`
+      : `<div class="modal-row"><span class="modal-label">${l}</span><span class="modal-val">${v}</span></div>`
+  ).join("");
+
+  document.getElementById("modalOverlay").classList.add("open");
+}
+
+function cerrarModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+  turnoActivo = null;
+}
+
+function toggleReprog() {
+  const f = document.getElementById("reprogForm");
+  f.style.display = f.style.display === "none" ? "block" : "none";
+  if (f.style.display === "block") {
+    document.getElementById("reprogFecha").value    = turnoActivo?.fecha || "";
+    document.getElementById("reprogHorario").value  = turnoActivo?.horario || "";
+  }
+}
+
+// ── ACCIONES ─────────────────────────────────────────────────
+async function cancelarTurno() {
+  if (!turnoActivo) return;
+  if (!confirm(`¿Cancelar el turno de ${turnoActivo.titulo.split(" — ")[1] || "esta mascota"}?`)) return;
+
+  try {
+    await fetch(`/api/cancelar?eventoId=${encodeURIComponent(turnoActivo.id)}`, { method:"GET", mode:"cors" });
+    mostrarToast("✅ Turno cancelado");
+    cerrarModal();
+    cargarSemana();
+  } catch(e) { mostrarToast("❌ Error al cancelar"); }
+}
+
+async function confirmarReprog() {
+  if (!turnoActivo) return;
+  const fecha   = document.getElementById("reprogFecha").value;
+  const horario = document.getElementById("reprogHorario").value.slice(0,5);
+  if (!fecha || !horario) { mostrarToast("Completá fecha y horario"); return; }
+
+  try {
+    const url = `/api/reprogramar?eventoId=${encodeURIComponent(turnoActivo.id)}&fecha=${fecha}&horario=${horario}`;
+    await fetch(url, { method:"GET", mode:"cors" });
+    mostrarToast("✅ Turno reprogramado");
+    cerrarModal();
+    cargarSemana();
+  } catch(e) { mostrarToast("❌ Error al reprogramar"); }
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+document.getElementById("modalOverlay").addEventListener("click", e => {
+  if (e.target === document.getElementById("modalOverlay")) cerrarModal();
+});
+document.getElementById("passInput").focus?.();
+</script>
+</body>
+</html>
