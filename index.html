@@ -42,6 +42,8 @@ const HORARIOS_SABADO = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30"
 ];
 const OCUPADOS = [];  // reemplazado dinámicamente
+const HORARIOS_CIRUGIA_SEMANA = ["08:00", "13:30", "15:00"];
+const HORARIOS_CIRUGIA_SABADO = ["13:00", "15:00"];
 
 function getDias() {
   const dias = [];
@@ -263,7 +265,7 @@ function DinuTurnos() {
 
                 {diaSeleccionado.esSabado ? (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "28px" }}>
-                    {HORARIOS_SABADO.map(h => {
+                    {(servicio?.id === 'cirugia' ? HORARIOS_CIRUGIA_SABADO : HORARIOS_SABADO).map(h => {
                       const ocupado = ocupados.includes(h);
                       const sel = horario === h;
                       return (
@@ -283,9 +285,9 @@ function DinuTurnos() {
                   </div>
                 ) : (
                   <>
-                    <p style={{ color: "rgba(197,168,90,0.6)", fontSize: "11px", letterSpacing: "0.08em", marginBottom: "10px" }}>MAÑANA</p>
+                    {servicio?.id !== 'cirugia' && <p style={{ color: "rgba(197,168,90,0.6)", fontSize: "11px", letterSpacing: "0.08em", marginBottom: "10px" }}>MAÑANA</p>}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "18px" }}>
-                      {HORARIOS_SEMANA.slice(0, 8).map(h => {
+                      {(servicio?.id === 'cirugia' ? HORARIOS_CIRUGIA_SEMANA : HORARIOS_SEMANA.slice(0, 8)).map(h => {
                         const ocupado = ocupados.includes(h);
                         const sel = horario === h;
                         return (
@@ -303,8 +305,8 @@ function DinuTurnos() {
                         );
                       })}
                     </div>
-                    <p style={{ color: "rgba(197,168,90,0.6)", fontSize: "11px", letterSpacing: "0.08em", marginBottom: "10px" }}>TARDE</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "28px" }}>
+                    {servicio?.id !== 'cirugia' && <p style={{ color: "rgba(197,168,90,0.6)", fontSize: "11px", letterSpacing: "0.08em", marginBottom: "10px" }}>TARDE</p>}
+                    {servicio?.id !== 'cirugia' && <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "28px" }}>
                       {HORARIOS_SEMANA.slice(8).map(h => {
                         const ocupado = ocupados.includes(h);
                         const sel = horario === h;
@@ -322,7 +324,7 @@ function DinuTurnos() {
                             }}>{h}</button>
                         );
                       })}
-                    </div>
+                    </div>}
                   </>
                 )}
 
