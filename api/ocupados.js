@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyoZMWoiMutNpY8wpJkrdQ0CV_EmaNzmddagEmDhIG0LWwhhBCvZI_YUIL-NlrZIum7Pg/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzff4YWmWCUld1RTPf0fKt2UruJGOoLy7WTnvHDGiFnZ4_Xs4IYXB5R_2wdkRiPNAQSuw/exec";
 
 export default async function handler(req, res) {
   const { fecha } = req.query;
