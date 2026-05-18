@@ -50,7 +50,7 @@ function getDias() {
   const hoy = new Date();
   const nombres = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
   const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-  for (let i = 1; i <= 14; i++) {
+  for (let i = 0; i <= 14; i++) {
     const d = new Date(hoy);
     d.setDate(hoy.getDate() + i);
     if (d.getDay() !== 0) {
